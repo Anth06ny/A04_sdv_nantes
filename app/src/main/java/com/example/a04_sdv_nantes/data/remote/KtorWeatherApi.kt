@@ -19,21 +19,20 @@ import kotlinx.serialization.json.Json
 
 //Suspend sera expliqué dans le chapitre des coroutines
 suspend fun main() {
-    val res = KtorUserApi.loadUser()
-    println("""
-        Il s'appelle ${res.name} pour le contacter :
-        Phone : ${res.coord?.phone ?: "-"}
-        Mail : ${res.coord?.mail ?: "-"}
-    """.trimIndent())
+    val res = KtorWeatherApi.loadWeathers("Nice")
+
+    for( r in res){
+        println(r.getResume())
+    }
 
 //    println("------")
 //    println(KtorUserApi.loadUsers().joinToString("\n\n"))
 //    KtorUserApi.close()
 }
 
-object KtorUserApi {
+object KtorWeatherApi {
     private const val API_URL =
-        "https://www.amonteiro.fr/api/randomuser"
+        "https://api.openweathermap.org/data/2.5/find?appid=b80967f0a6bd10d23e44848547b26550&units=metric&lang=fr&q="
 
     //Création et réglage du client
     private val client = HttpClient {
@@ -57,8 +56,8 @@ object KtorUserApi {
 
     //GET Le JSON reçu sera parser en List<MuseumDTO>,
     //Crash si le JSON ne correspond pas
-    suspend fun loadUser(): UserDTO {
-        val response = client.get(API_URL) {
+    suspend fun loadWeathers(cityName:String): List<WeatherEntity> {
+        val response = client.get(API_URL + cityName) {
 //            headers {
 //                append("Authorization", "Bearer YOUR_TOKEN")
 //                append("Custom-Header", "CustomValue")
@@ -68,47 +67,43 @@ object KtorUserApi {
             throw Exception("Erreur API: ${response.status} - ${response.bodyAsText()}")
         }
 
-        return response.body()
+        return response.body<WeatherAPIResult>().list
         //possibilité de typer le body
         //.body<List<MuseumDTO>>()
     }
 
-    suspend fun loadUsers(): List<UserDTO> {
-        val response = client.get(API_URL + "s") {
-//            headers {
-//                append("Authorization", "Bearer YOUR_TOKEN")
-//                append("Custom-Header", "CustomValue")
-//            }
-        }
-        if (!response.status.isSuccess()) {
-            throw Exception("Erreur API: ${response.status} - ${response.bodyAsText()}")
-        }
-
-        return response.body()
-        //possibilité de typer le body
-        //.body<List<MuseumDTO>>()
-    }
 
     //Ferme le Client mais celui ci ne sera plus utilisable. Uniquement pour le main
     fun close() = client.close()
-
-    //Avancés : Exemple avec Flow
-    //fun loadMuseumsFlow() = flow<List<MuseumDTO>> {
-    //    emit(client.get(API_URL).body())
-    //}
 }
 
 //DATA CLASS
 
 //Possible qu'il y ait besoin de cette annotation en fonction du compilateur
 @Serializable //KotlinX impose cette annotation
-data class UserDTO(
-    val age: Int,
-    val name: String,
-    val coord : CoordDTO?)
+data class WeatherAPIResult(val list : List<WeatherEntity>)
 
 @Serializable //KotlinX impose cette annotation
-data class CoordDTO(
-    val phone: String?,
-    val mail: String?
-)
+data class WeatherEntity(
+    val name: String,
+    val id: Int,
+    val main : TempEntity,
+    val wind : WindEntity,
+    val weather : List<DescriptionEntity>
+) {
+    fun getResume() = """
+            Il fait ${main.temp}° à $name (id=$id) avec un vent de ${wind.speed} m/s
+            -Description : ${weather.firstOrNull()?.description ?: "-"}
+            -Icône : ${weather.firstOrNull()?.icon ?: "-"}
+        """.trimIndent()
+}
+
+@Serializable
+data class TempEntity(var temp: Double)
+
+@Serializable
+data class WindEntity(var speed: Double)
+
+@Serializable
+data class DescriptionEntity(var description: String, var icon: String)
+
