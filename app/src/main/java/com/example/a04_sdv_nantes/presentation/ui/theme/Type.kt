@@ -1,4 +1,4 @@
-package com.example.a04_sdv_nantes.ui.theme
+package com.example.a04_sdv_nantes.presentation.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

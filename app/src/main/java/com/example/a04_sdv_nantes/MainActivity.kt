@@ -11,7 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.a04_sdv_nantes.ui.theme.A04_sdv_nantesTheme
+import com.example.a04_sdv_nantes.presentation.ui.screens.SearchScreen
+import com.example.a04_sdv_nantes.presentation.ui.theme.A04_sdv_nantesTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,29 +21,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             A04_sdv_nantesTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    SearchScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    A04_sdv_nantesTheme {
-        Greeting("Android")
     }
 }
