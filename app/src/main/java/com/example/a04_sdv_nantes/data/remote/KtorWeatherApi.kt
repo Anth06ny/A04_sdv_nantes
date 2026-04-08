@@ -8,8 +8,6 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.isSuccess
@@ -21,7 +19,7 @@ import kotlinx.serialization.json.Json
 suspend fun main() {
     val res = KtorWeatherApi.loadWeathers("Nice")
 
-    for( r in res){
+    for (r in res) {
         println(r.getResume())
     }
 
@@ -56,7 +54,8 @@ object KtorWeatherApi {
 
     //GET Le JSON reçu sera parser en List<MuseumDTO>,
     //Crash si le JSON ne correspond pas
-    suspend fun loadWeathers(cityName:String): List<WeatherEntity> {
+    suspend fun loadWeathers(cityName: String): List<WeatherEntity> {
+
         val response = client.get(API_URL + cityName) {
 //            headers {
 //                append("Authorization", "Bearer YOUR_TOKEN")
@@ -67,9 +66,13 @@ object KtorWeatherApi {
             throw Exception("Erreur API: ${response.status} - ${response.bodyAsText()}")
         }
 
-        return response.body<WeatherAPIResult>().list
-        //possibilité de typer le body
-        //.body<List<MuseumDTO>>()
+        val list = response.body<WeatherAPIResult>().list
+        list.forEach {
+            it.weather.forEach {
+                it.icon = "https://openweathermap.org/img/wn/${it.icon}@4x.png"
+            }
+        }
+        return list
     }
 
 
@@ -81,15 +84,15 @@ object KtorWeatherApi {
 
 //Possible qu'il y ait besoin de cette annotation en fonction du compilateur
 @Serializable //KotlinX impose cette annotation
-data class WeatherAPIResult(val list : List<WeatherEntity>)
+data class WeatherAPIResult(val list: List<WeatherEntity>)
 
 @Serializable //KotlinX impose cette annotation
 data class WeatherEntity(
     val name: String,
     val id: Int,
-    val main : TempEntity,
-    val wind : WindEntity,
-    val weather : List<DescriptionEntity>
+    val main: TempEntity,
+    val wind: WindEntity,
+    val weather: List<DescriptionEntity>
 ) {
     fun getResume() = """
             Il fait ${main.temp}° à $name (id=$id) avec un vent de ${wind.speed} m/s
