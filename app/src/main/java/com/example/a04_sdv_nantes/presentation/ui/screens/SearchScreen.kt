@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActionScope
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
@@ -22,6 +25,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -35,10 +39,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.example.a04_sdv_nantes.R
 import com.example.a04_sdv_nantes.data.remote.WeatherEntity
@@ -56,13 +62,17 @@ fun SearchScreenPreview() {
     //Utilisé par exemple dans MainActivity.kt sous setContent {...}
     A04_sdv_nantesTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            SearchScreen(modifier = Modifier.padding(innerPadding))
+
+            val mainViewModel = viewModel<MainViewModel>()
+            mainViewModel.loadFakeData(false, "")
+            SearchScreen(modifier = Modifier.padding(innerPadding),
+                viewModel = mainViewModel)
         }
     }
 }
 
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = MainViewModel()) {
+fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel()) {
     Column(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
@@ -70,13 +80,18 @@ fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = MainV
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        val searchText : MutableState<String> = remember { mutableStateOf("") }
+        val searchText: MutableState<String> = remember { mutableStateOf("") }
 
-        SearchBar(searchText= searchText)
+        SearchBar(
+            text = searchText.value,
+            onValueChange = { searchText.value = it },
+            onSearch = { viewModel.loadWeathers(searchText.value)}
+        )
 
-        val list = viewModel.dataList.collectAsStateWithLifecycle().value.filter {
-            it.name.contains(searchText.value, true)
-        }
+        val list = viewModel.dataList.collectAsStateWithLifecycle().value
+//            .filter {
+//            it.name.contains(searchText.value, true)
+//        }
         //Permet de remplacer très facilement le RecyclerView. LazyRow existe aussi
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -103,7 +118,7 @@ fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = MainV
             }
 
             Button(
-                onClick = { /* Do something! */ },
+                onClick = { viewModel.loadWeathers(searchText.value) },
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(
@@ -122,13 +137,17 @@ fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = MainV
 
 
 @Composable
-fun SearchBar(modifier: Modifier = Modifier, searchText : MutableState<String>) {
+fun SearchBar(modifier: Modifier = Modifier,
+              text:String,
+              onValueChange: (String) -> Unit,
+              onSearch: (KeyboardActionScope.() -> Unit)?
 
+              ) {
 
 
     TextField(
-        value = searchText.value, //Valeur affichée
-        onValueChange = { newValue: String -> searchText.value = newValue }, //Nouveau texte entrée
+        value = text, //Valeur affichée
+        onValueChange = onValueChange, //Nouveau texte entrée
         leadingIcon = { //Image d'icône
             Icon(
                 imageVector = Icons.Default.Search,
@@ -146,8 +165,8 @@ fun SearchBar(modifier: Modifier = Modifier, searchText : MutableState<String>) 
         //Text("Recherche")
         //},
 
-        //keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), // Définir le bouton "Entrée" comme action de recherche
-        //keyboardActions = KeyboardActions(onSearch = {onSearchAction()}), // Déclenche l'action définie
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), // Définir le bouton "Entrée" comme action de recherche
+        keyboardActions = KeyboardActions(onSearch = onSearch), // Déclenche l'action définie
         //Comment le composant doit se placer
         modifier = modifier
             .fillMaxWidth() // Prend toute la largeur
@@ -188,12 +207,15 @@ fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherEntity) {
                 .widthIn(max = 100.dp)
         )
 
-        Column(modifier = Modifier.padding(start = 4.dp).fillMaxWidth().clickable{
-            expended = !expended
-        }) {
+        Column(modifier = Modifier
+            .padding(start = 4.dp)
+            .fillMaxWidth()
+            .clickable {
+                expended = !expended
+            }) {
             Text(text = data.name, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
             Text(
-                text = if(expended) data.getResume() else ( data.getResume().take(10) + "..."), fontSize = 14.sp,
+                text = if (expended) data.getResume() else (data.getResume().take(10) + "..."), fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.animateContentSize()
             )
