@@ -1,5 +1,6 @@
 package com.example.a04_sdv_nantes.presentation.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.a04_sdv_nantes.presentation.ui.theme.A04_sdv_nantesTheme
+import com.example.a04_sdv_nantes.presentation.viewmodel.MainViewModel
 
 @Preview(showBackground = true, showSystemUi = true)
 @Preview(showBackground = true, showSystemUi = true,
@@ -31,16 +34,16 @@ fun SearchScreenPreview() {
 }
 
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier) {
+fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = MainViewModel()) {
     Column(modifier= modifier) {
         println("SearchScreen()")
-        Text(text = "Text1",fontSize = 20.sp)
+        Text(text = "Text1",fontSize = 20.sp, modifier = Modifier.background(Color.Blue))
         Spacer(Modifier.size(8.dp))
         Text(text = "Text2",fontSize = 14.sp)
-        repeat(10) {
-            PictureRowItem("fghjk$it")
-        }
 
+        viewModel.dataList.collectAsStateWithLifecycle().value.forEach {
+            PictureRowItem(it.name)
+        }
     }
 }
 
