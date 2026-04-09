@@ -1,5 +1,6 @@
 package com.example.a04_sdv_nantes.presentation.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,10 +23,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.example.a04_sdv_nantes.R
 import com.example.a04_sdv_nantes.data.remote.WeatherEntity
+import com.example.a04_sdv_nantes.presentation.ui.MyError
 import com.example.a04_sdv_nantes.presentation.ui.theme.A04_sdv_nantesTheme
 import com.example.a04_sdv_nantes.presentation.viewmodel.MainViewModel
 
@@ -65,14 +67,44 @@ fun SearchScreenPreview() {
 
             val mainViewModel = viewModel<MainViewModel>()
             mainViewModel.loadFakeData(false, "")
-            SearchScreen(modifier = Modifier.padding(innerPadding),
-                viewModel = mainViewModel)
+            SearchScreen(
+                modifier = Modifier.padding(innerPadding),
+                viewModel = mainViewModel
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true, locale = "fr")
+@Preview(
+    showBackground = true, showSystemUi = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES or android.content.res.Configuration.UI_MODE_TYPE_NORMAL
+)
+@Composable
+fun SearchScreenErrorPreview() {
+    //Il faut remplacer NomVotreAppliTheme par le thème de votre application
+    //Utilisé par exemple dans MainActivity.kt sous setContent {...}
+    A04_sdv_nantesTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+
+            val mainViewModel = viewModel<MainViewModel>()
+            mainViewModel.loadFakeData(true, "Une erreur")
+            SearchScreen(
+                modifier = Modifier.padding(innerPadding),
+                viewModel = mainViewModel
+            )
         }
     }
 }
 
 @Composable
 fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel()) {
+
+
+    val list = viewModel.dataList.collectAsStateWithLifecycle().value
+    val runInProgress = viewModel.runInProgress.collectAsStateWithLifecycle().value
+    val errorMessage = viewModel.errorMessage.collectAsStateWithLifecycle().value
+
     Column(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
@@ -85,10 +117,15 @@ fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = viewM
         SearchBar(
             text = searchText.value,
             onValueChange = { searchText.value = it },
-            onSearch = { viewModel.loadWeathers(searchText.value)}
+            onSearch = { viewModel.loadWeathers(searchText.value) }
         )
 
-        val list = viewModel.dataList.collectAsStateWithLifecycle().value
+        MyError(errorMessage = errorMessage)
+
+        AnimatedVisibility(runInProgress) {
+            CircularProgressIndicator()
+        }
+
 //            .filter {
 //            it.name.contains(searchText.value, true)
 //        }
@@ -137,12 +174,13 @@ fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = viewM
 
 
 @Composable
-fun SearchBar(modifier: Modifier = Modifier,
-              text:String,
-              onValueChange: (String) -> Unit,
-              onSearch: (KeyboardActionScope.() -> Unit)?
+fun SearchBar(
+    modifier: Modifier = Modifier,
+    text: String,
+    onValueChange: (String) -> Unit,
+    onSearch: (KeyboardActionScope.() -> Unit)?
 
-              ) {
+) {
 
 
     TextField(
@@ -207,12 +245,13 @@ fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherEntity) {
                 .widthIn(max = 100.dp)
         )
 
-        Column(modifier = Modifier
-            .padding(start = 4.dp)
-            .fillMaxWidth()
-            .clickable {
-                expended = !expended
-            }) {
+        Column(
+            modifier = Modifier
+                .padding(start = 4.dp)
+                .fillMaxWidth()
+                .clickable {
+                    expended = !expended
+                }) {
             Text(text = data.name, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
             Text(
                 text = if (expended) data.getResume() else (data.getResume().take(10) + "..."), fontSize = 14.sp,
