@@ -46,9 +46,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.a04_sdv_nantes.R
 import com.example.a04_sdv_nantes.data.remote.WeatherEntity
+import com.example.a04_sdv_nantes.presentation.Routes
 import com.example.a04_sdv_nantes.presentation.ui.MyError
 import com.example.a04_sdv_nantes.presentation.ui.theme.A04_sdv_nantesTheme
 import com.example.a04_sdv_nantes.presentation.viewmodel.MainViewModel
@@ -98,7 +100,7 @@ fun SearchScreenErrorPreview() {
 }
 
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel()) {
+fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = viewModel(), navHostController: NavHostController? = null) {
 
 
     val list = viewModel.dataList.collectAsStateWithLifecycle().value
@@ -135,7 +137,12 @@ fun SearchScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = viewM
             modifier = Modifier.weight(1f)
         ) {
             items(list.size) {
-                PictureRowItem(data = list[it])
+                PictureRowItem(
+                    data = list[it],
+                    onClick = {
+                        navHostController?.navigate(Routes.DetailRoute(list[it].id))
+                    }
+                )
             }
         }
 
@@ -213,7 +220,7 @@ fun SearchBar(
 }
 
 @Composable //Composable affichant 1 élément
-fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherEntity) {
+fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherEntity, onClick: () -> Unit) {
 
     var expended by remember { mutableStateOf(false) }
 
@@ -243,6 +250,7 @@ fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherEntity) {
             modifier = Modifier
                 .heightIn(max = 100.dp)
                 .widthIn(max = 100.dp)
+                .clickable(onClick = onClick)
         )
 
         Column(

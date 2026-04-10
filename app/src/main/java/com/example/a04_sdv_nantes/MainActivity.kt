@@ -1,7 +1,6 @@
 package com.example.a04_sdv_nantes
 
 import android.os.Bundle
-import android.util.Log.i
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,20 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.a04_sdv_nantes.data.remote.WindEntity
-import com.example.a04_sdv_nantes.presentation.ui.screens.SearchScreen
+import com.example.a04_sdv_nantes.presentation.AppNavigation
 import com.example.a04_sdv_nantes.presentation.ui.theme.A04_sdv_nantesTheme
 
 class MainActivity : ComponentActivity() {
@@ -33,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             A04_sdv_nantesTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    SearchScreen(
+                    AppNavigation(
                         modifier = Modifier.padding(innerPadding)
                     )
 //                    Experience(
@@ -53,7 +45,7 @@ data class Dice(var value: Int = 6) {
 }
 
 @Composable
-fun Experience(modifier :Modifier = Modifier) {
+fun Experience(modifier: Modifier = Modifier) {
 
     Column(modifier) {
 
